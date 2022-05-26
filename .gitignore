@@ -4,14 +4,21 @@
 # But not these files...
 !/.gitignore
 
+# GO
 !*.go
 !go.sum
 !go.mod
+
+# LINT
+!.golangci.yaml
+!.golic.yaml
+!.licignore
+
+# BUILD
 !/.github/workflows/build.yaml
 
 !README.md
 !LICENSE
-
 !Makefile
 
 # ...even if they are in subdirectories
