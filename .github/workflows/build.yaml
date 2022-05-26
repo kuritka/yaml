@@ -1,0 +1,56 @@
+name: Golang build + lint + golic + gokart + test
+on:
+  push:
+    paths-ignore:
+      - '**.md'
+      - '**.svg'
+      - '**.drawio'
+      - '.spelling'
+  pull_request:
+    branches:
+      - master
+    paths-ignore:
+      - '**.md'
+      - '**.svg'
+      - '**.drawio'
+      - '.spelling'
+jobs:
+  skip-check:
+    runs-on: ubuntu-latest
+    name: Skip the job?
+    outputs:
+          should_skip: ${{ steps.skip_check.outputs.should_skip }}
+    steps:
+    - id: skip_check
+      uses: fkirc/skip-duplicate-actions@v3.4.1
+      with:
+        skip_after_successful_duplicate: 'true'
+        do_not_skip: '["workflow_dispatch", "schedule"]'
+
+  go-inspect:
+    name: Inspect packages
+    runs-on: ubuntu-20.04
+    needs: skip-check
+    if: ${{ needs.skip-check.outputs.should_skip != 'true' }}
+    steps:
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.17.6
+      - uses: actions/checkout@v2
+      # see: https://golangci-lint.run/usage/configuration/#config-file
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v2.5.2
+        with:
+          version: v1.42.1
+          skip-go-installation: true
+      - name: golic
+        run: |
+          go install github.com/AbsaOSS/golic@v0.7.2
+          golic inject --dry -x -t apache2
+      - name: gokart
+        run: |
+          go install github.com/praetorian-inc/gokart@v0.2.0
+          gokart scan --globalsTainted
+      - name: go test
+        run: go test ./...
